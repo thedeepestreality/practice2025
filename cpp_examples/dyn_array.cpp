@@ -12,17 +12,66 @@ public:
         m_size = 0;
     }
 
-    int size(){
+    int size() const {
         return m_size;
     }
 
-    int* data(){
+    void resize(int new_sz){
+        int* tmp = new int[new_sz];
+        for (int idx = 0; idx < std::min(m_size, new_sz); ++idx)
+            tmp[idx] = m_data[idx];
+        delete[] m_data;
+        m_data = tmp;
+        m_size = new_sz;
+    }
+
+    int* data() {
+        // m_data = nullptr;
+        // m_data[0] = 3;
+        // *(m_data+0) = 3;
         return m_data;
     }
 
+    const int* data() const {
+        return m_data;
+    }
+
+    // Parameterized constructor
+    // Параметризованный конструктор
     DynArrayInt(int sz){
         init(sz);
     }
+
+    // Another parameterized constructor
+    // Другой параметризованный конструктор
+    DynArrayInt(const int* data, int sz){
+        init(sz);
+        for (int idx = 0; idx < sz; ++idx)
+            m_data[idx] = data[idx];
+    }
+
+    // Default constructor
+    // Конструктор по умолчанию
+    // DynArrayInt(){
+    //     m_data = nullptr;
+    //     m_size = 0;
+    // }
+    // Order of the init is not as initializer list
+    // but as in struct/class field order
+    DynArrayInt() : m_data(nullptr), m_size(0)
+    {}
+
+    // Copy constructor
+    // Конструктор копий
+    // (Копирующий конструктор)
+    DynArrayInt(const DynArrayInt& src) : DynArrayInt(src.data(), src.size())
+    {}
+
+    // DynArrayInt(const DynArrayInt& src){
+    //     init(src.size());
+    //     for (int idx = 0; idx < m_size; ++idx)
+    //         m_data[idx] = src.data()[idx];
+    // }
 
     ~DynArrayInt(){
         std::cout << "Destructor\n";
@@ -69,5 +118,19 @@ int main(){
         // arr.deinit();
     }
     std::cout << "Outside scope\n";
+
+    const DynArrayInt const_arr(3);
+    // const_arr.size();
+    // const_arr.data()[0] = 42;
+
+    DynArrayInt arr(3);
+    DynArrayInt default_arr;
+
+    DynArrayInt arr_copy(arr.data(), arr.size());
+    // DynArrayInt arr2(arr);
+    DynArrayInt arr2 = arr; // Call to copy constructor
+
+    // default_arr = arr; // Assignment operator
+
     return 0;
 }
