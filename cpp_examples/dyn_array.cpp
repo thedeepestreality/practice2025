@@ -2,9 +2,15 @@
 
 struct DynArrayInt{
 private:
-    int* m_data;
-    int m_size;
+    int* m_data = nullptr;
+    int m_size = 0;
+    static int count;
+    static const int static_const = 0;
 public:
+    static int getCount(){
+        return count;
+    }
+
     void init(int sz);
     void deinit(){
         delete[] m_data;
@@ -39,12 +45,14 @@ public:
     // Parameterized constructor
     // Параметризованный конструктор
     DynArrayInt(int sz){
+        ++count;
         init(sz);
     }
 
     // Another parameterized constructor
     // Другой параметризованный конструктор
     DynArrayInt(const int* data, int sz){
+        ++count;
         init(sz);
         for (int idx = 0; idx < sz; ++idx)
             m_data[idx] = data[idx];
@@ -59,7 +67,9 @@ public:
     // Order of the init is not as initializer list
     // but as in struct/class field order
     DynArrayInt() : m_data(nullptr), m_size(0)
-    {}
+    {
+        ++count;
+    }
 
     // Copy constructor
     // Конструктор копий
@@ -74,13 +84,27 @@ public:
     // }
 
     ~DynArrayInt(){
+        --count;
         std::cout << "Destructor\n";
         deinit();
     }
+
+    DynArrayInt& operator=(const DynArrayInt& rhs){
+        if (this != &rhs){
+            delete[] m_data;
+            m_size = rhs.m_size;
+            m_data = new int[m_size];
+            for (int idx = 0; idx < m_size; ++idx)
+                m_data[idx] = rhs.m_data[idx];
+        }
+        return *this;
+    }
 };
 
-void DynArrayInt::init(int sz){
-    m_size = sz;
+int DynArrayInt::count = 0;
+
+void DynArrayInt::init(int m_size){
+    this->m_size = m_size;
     m_data = new int [m_size];
 }
 
@@ -130,7 +154,16 @@ int main(){
     // DynArrayInt arr2(arr);
     DynArrayInt arr2 = arr; // Call to copy constructor
 
+    DynArrayInt arr2; // Default constructor
+    arr2 = arr; // Assignment operator
+
+    DynArrayInt* arr_ptr;
+
     // default_arr = arr; // Assignment operator
+
+    std::cout << "Static via method = " << DynArrayInt::getCount() << '\n';
+    std::cout << "Static via object = " << arr.getCount() << '\n';
+    std::cout << "Static via const obj = " << const_arr.getCount() << '\n';
 
     return 0;
 }
