@@ -1,5 +1,8 @@
 #include <iostream>
 #include <cstdint>
+#include <vector>
+
+class Spy;
 
 template <typename Type>
 class Vector{
@@ -14,8 +17,19 @@ public:
         m_capacity(1)
     {}
 
+    Vector(size_t capacity) :
+        m_size(0),
+        m_capacity(capacity)
+    {
+        // global new
+        m_data = reinterpret_cast<Type*>(::operator new(sizeof(Type)*capacity));
+    }
+
     ~Vector(){
-        delete[] m_data;
+        // delete[] m_data;
+        for (size_t idx = 0; idx < m_size; ++idx)
+            m_data[idx].~Type();
+        ::operator delete[](m_data);
         m_data = nullptr;
     }
 
@@ -35,6 +49,11 @@ public:
         delete[] m_data;
         m_data = tmp;
         m_data[m_size++] = val;
+    }
+
+    void emplace_back(int arg){
+        // placement new
+        new(m_data+m_size++) Spy(arg);
     }
 
     void print() const{
@@ -112,6 +131,21 @@ public:
     };
 };
 
+struct Spy{
+    Spy(int arg = 42) {
+        std::cout << "Spy has been hired\n";
+    }
+    Spy& operator=(const Spy& obj){
+        if (this == &obj)
+            return *this;
+        std::cout << "Spy assigned!\n";
+        return *this;
+    }
+    ~Spy(){
+        std::cout << "Spy has been retired\n";
+    }
+};
+
 int main(){
     Vector<int> vec;
     vec.push_back(1);
@@ -128,6 +162,16 @@ int main(){
     vec_bool.push_back(true);
     vec_bool[1] = true;
     bool val = vec_bool[0];
+
+    {
+        Vector<Spy> vec_spy(3);
+        // vec_spy.push_back(Spy());
+        vec_spy.emplace_back(42);
+    }
+
+    std::cout << "THE END\n";
+
+    std::vector<int> stl_vec;
 
     return 0;
 }

@@ -1,0 +1,13 @@
+variables
+
+target1: target2 target3
+	command1
+	command2
+	comman3
+
+target2: target3
+	command4
+
+target3:
+	command5
+	commaned6

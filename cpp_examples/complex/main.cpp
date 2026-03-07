@@ -29,7 +29,7 @@ int main(){
     // std::cout << '\n';
 
     Complex result = deg2(Complex(1.0, 1.0));
-    std::cout << "result = " << result << '\n';
+    std::cout << "result = " << result << " \n";
 
     return 0;
 }
