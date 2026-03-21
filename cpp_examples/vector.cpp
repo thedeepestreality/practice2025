@@ -45,7 +45,7 @@ public:
         m_capacity *= 2;
         Type* tmp = new Type[m_capacity];
         for (size_t idx = 0; idx < m_size; ++idx)
-            tmp[idx] = m_data[idx];
+            tmp[idx] = std::move(m_data[idx]);
         delete[] m_data;
         m_data = tmp;
         m_data[m_size++] = val;
@@ -61,6 +61,57 @@ public:
             std::cout << m_data[idx] << ' ';
         std::cout << '\n';
     }
+
+    // Copy assignment
+    Vector<Type>& operator=(const Vector<Type>& rhs){
+        if (this == &rhs)
+            return *this;
+        delete[] m_data;
+        m_size = rhs.m_size;
+        m_capacity = rhs.m_capacity;
+        for (size_t idx = 0; idx < m_size; ++idx)
+            m_data[idx] = rhs.m_data[idx];
+        std::cout << "Vector Copy Assignment\n";
+        return *this;
+    }
+
+    // Copy constructor
+    Vector<Type>(const Vector<Type>& rhs){
+        m_size = rhs.m_size;
+        m_capacity = rhs.m_capacity;
+        for (size_t idx = 0; idx < m_size; ++idx)
+            m_data[idx] = rhs.m_data[idx];
+        std::cout << "Vector Copy Constructor\n";
+    }
+
+    // Move assignment
+    Vector<Type>& operator=(Vector<Type>&& rhs){
+        if (this == &rhs)
+            return *this;
+        // delete[] m_data;
+        // m_data = rhs.m_data;
+        // m_size = rhs.m_size;
+        // m_capacity = rhs.m_capacity;
+        // rhs.m_data = nullptr;
+        // rhs.m_size = 0;
+        // rhs.m_capacity = 0;
+
+        std::swap(m_data, rhs.m_data);
+        std::swap(m_size, rhs.m_size);
+        std::swap(m_capacity, rhs.m_capacity);
+        std::cout << "Vector Move Assignment\n";
+        return *this;
+
+    }
+
+    // Move Constructor
+    Vector<Type>(Vector<Type>&& rhs): Vector<Type>(){
+        std::swap(m_data, rhs.m_data);
+        std::swap(m_size, rhs.m_size);
+        std::swap(m_capacity, rhs.m_capacity);
+        std::cout << "Vector Move Constructor\n";
+    }
+
 };
 
 template<>
@@ -146,6 +197,27 @@ struct Spy{
     }
 };
 
+void the_safest_func_ever() noexcept{
+    throw 1;
+}
+
+template <typename Type>
+struct remove_ref{
+    using type = Type;
+};
+template <typename Type>
+struct remove_ref<Type&>{
+    using type = Type;
+};
+
+Vector<int> foo(){
+    Vector<int> vec(100);
+    vec.push_back(1);
+    vec.push_back(1);
+    vec.push_back(1);
+    return vec;
+}
+
 int main(){
     Vector<int> vec;
     vec.push_back(1);
@@ -172,6 +244,30 @@ int main(){
     std::cout << "THE END\n";
 
     std::vector<int> stl_vec;
+
+    // std::vector<int&> weird_vec;
+
+    const int&& x = 1;
+
+    int z = 2;
+    remove_ref<int&>::type y = z;
+    remove_ref<int>::type q = z;
+
+    Vector<int> ret_vec = foo();
+    ret_vec = foo();
+    Vector<int> move_vec = std::move(vec);
+    {
+        Vector<int> tmp_vec(3);
+        tmp_vec.push_back(1);
+        ret_vec = std::move(tmp_vec);
+    }
+
+    // try{
+    //     the_safest_func_ever();
+    // }
+    // catch(int ex){
+    //     std::cout << "Exception happened\n";
+    // }
 
     return 0;
 }
