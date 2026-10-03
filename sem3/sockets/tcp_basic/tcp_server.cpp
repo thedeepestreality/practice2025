@@ -34,8 +34,9 @@ int main(int argc, char const* argv[])
     struct sockaddr_in address;
     int addrlen = sizeof(address);
 	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = inet_addr("127.0.0.1");
 	// address.sin_addr.s_addr = inet_addr("172.23.110.31");
-	address.sin_addr.s_addr = INADDR_ANY;
+	// address.sin_addr.s_addr = INADDR_ANY;
 	address.sin_port = htons(PORT);
 
 	// Forcefully attaching socket to the port 8080
@@ -64,6 +65,8 @@ int main(int argc, char const* argv[])
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
+
+	std::cout << "Accepted connection\n";
 
 	valread = read(new_socket, buffer, 1024);
 	std::cout << "msg from client: " << buffer << '\n';
