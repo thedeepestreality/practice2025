@@ -5,13 +5,17 @@
 #include <unistd.h>
 #include <cstring>
 #include <iostream>
-const int PORT = 2078;
+const int PORT = 8080;
 
 int main(int argc, char const* argv[])
 {
 	int valread;
 	int opt = 1;
-    const char* hello = "Hello from server";
+    const char* hello = "HTTP/1.1 200 OK\n" \
+	"Content-Length: 48\n" \
+	"Content-Type: text/html\n" \
+	"Connection: Closed\n\n" \
+	"<html><body><h1>Hello, World!</h1></body></html>";
 	char buffer[1024] = { 0 };
     int server_fd = socket(AF_INET, SOCK_STREAM, 0);
 	// Creating socket file descriptor
@@ -19,7 +23,7 @@ int main(int argc, char const* argv[])
 		perror("socket failed");
 		exit(EXIT_FAILURE);
 	}
-	// Forcefully attaching socket to the port 8080
+	
     int res = setsockopt(
         server_fd, 
         SOL_SOCKET,
