@@ -1,4 +1,4 @@
-"""Forward newline-terminated serial strings to connected browsers."""
+"""Forward serial lines to browsers and write their game-over signal to serial."""
 
 import asyncio
 import sys
@@ -14,12 +14,15 @@ async def main():
     async def handle(websocket):
         clients.add(websocket)
         try:
-            await websocket.wait_closed()
+            async for message in websocket:
+                if message == "1":
+                    device.write(b"1")
+                    print("Game over: wrote 1 to serial", flush=True)
         finally:
             clients.discard(websocket)
 
     # Match the baud rate to your device. Timeout lets shutdown finish promptly.
-    with serial.Serial(port, baudrate=115200, timeout=0.2) as device:
+    with serial.Serial(port, baudrate=115200, timeout=0.2, write_timeout=1) as device:
         async with serve(handle, "127.0.0.1", 8765):
             print(f"Reading {port} at 115200 baud; ws://127.0.0.1:8765", flush=True)
             pending = b""

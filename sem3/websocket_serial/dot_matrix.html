@@ -17,7 +17,7 @@
 </form>
 <p id="status">Connecting...</p>
 <p>Send “vrx vry” (0–1023). Below 400: left/up. Above 600: right/down.
-  One step per message; the dot stops at the edges.</p>
+  One step per message; the dot stops at the edges. Reach the green exit to finish and reset.</p>
 <p id="reading">Waiting for joystick data.</p>
 <canvas id="matrix" aria-label="Dot matrix with a red dot at the top-left" role="img"></canvas>
 
@@ -33,6 +33,8 @@
   let rows = 12;
   let x = 0;
   let y = 0;
+  let exitX = 0;
+  let exitY = 0;
 
   function draw() {
     context.clearRect(0, 0, canvas.width, canvas.height);
@@ -40,18 +42,29 @@
       for (let column = 0; column < columns; column++) {
         context.beginPath();
         context.arc((column + 0.5) * spacing, (row + 0.5) * spacing, 7, 0, 2 * Math.PI);
-        context.fillStyle = column === x && row === y ? "red" : "#aaa";
+        context.fillStyle = column === x && row === y ? "red"
+          : column === exitX && row === exitY ? "green" : "#aaa";
         context.fill();
       }
     }
-    canvas.setAttribute("aria-label", `Dot matrix: red dot at column ${x + 1}, row ${y + 1}`);
+    canvas.setAttribute("aria-label", `Red dot: column ${x + 1}, row ${y + 1}. Green exit: column ${exitX + 1}, row ${exitY + 1}.`);
   }
 
-  function reset() {
-    columns = Number(columnsInput.value);
-    rows = Number(rowsInput.value);
+  function reset(useInputs = true) {
+    const nextColumns = useInputs ? Number(columnsInput.value) : columns;
+    const nextRows = useInputs ? Number(rowsInput.value) : rows;
+    if (nextColumns * nextRows < 2) {
+      reading.textContent = "Choose at least two cells for a player and an exit.";
+      return;
+    }
+    columns = nextColumns;
+    rows = nextRows;
     x = 0;
     y = 0;
+    // Skip cell 0, which is the player's starting position.
+    const exit = 1 + Math.floor(Math.random() * (columns * rows - 1));
+    exitX = exit % columns;
+    exitY = Math.floor(exit / columns);
     canvas.width = columns * spacing;
     canvas.height = rows * spacing;
     draw();
@@ -82,6 +95,12 @@
     const [vrx, vry] = values;
     x = Math.max(0, Math.min(columns - 1, x + direction(vrx)));
     y = Math.max(0, Math.min(rows - 1, y + direction(vry)));
+    if (x === exitX && y === exitY) {
+      socket.send("1");
+      reset(false);
+      reading.textContent = "Game over! Sent 1. New board ready.";
+      return;
+    }
     reading.textContent = `vrx: ${vrx}, vry: ${vry} — column: ${x + 1}, row: ${y + 1}`;
     draw();
   };
