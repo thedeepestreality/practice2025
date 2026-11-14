@@ -40,5 +40,13 @@ Stop the other servers first, then open or reload `index.html`. Incoming
 strings appear automatically on the page; the send button isn't needed.
 This server only reads from serial and sends to WebSocket.
 
+Open `dot_matrix.html` for a joystick-controlled canvas instead. Set columns
+and rows with **Apply / reset**. Send serial lines such as `800 512\n`:
+the first value controls horizontal motion and the second controls vertical
+motion. Each WebSocket message moves one cell per active axis (diagonal
+movement is possible). Values below 400 move left/up, values above 600 move
+right/down, and 400 through 600 hold still. The red dot starts at the top
+left and stops at grid edges. Invalid messages are ignored.
+
 API references: [websockets](https://websockets.readthedocs.io/en/stable/reference/asyncio/server.html),
 [pySerial](https://pyserial.readthedocs.io/en/latest/pyserial_api.html).

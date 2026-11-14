@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Joystick dot matrix</title>
+<style>
+  body { font-family: sans-serif; margin: 24px; }
+  input { width: 65px; }
+  canvas { display: block; max-width: 100%; margin-top: 16px; background: #fafafa; }
+</style>
+
+<h1>Joystick dot matrix</h1>
+<form id="settings">
+  <label>Columns <input id="columns" type="number" min="1" max="100" value="16" required></label>
+  <label>Rows <input id="rows" type="number" min="1" max="100" value="12" required></label>
+  <button>Apply / reset</button>
+</form>
+<p id="status">Connecting...</p>
+<p>Send “vrx vry” (0–1023). Below 400: left/up. Above 600: right/down.
+  One step per message; the dot stops at the edges.</p>
+<p id="reading">Waiting for joystick data.</p>
+<canvas id="matrix" aria-label="Dot matrix with a red dot at the top-left" role="img"></canvas>
+
+<script>
+  const canvas = document.getElementById("matrix");
+  const context = canvas.getContext("2d");
+  const status = document.getElementById("status");
+  const reading = document.getElementById("reading");
+  const columnsInput = document.getElementById("columns");
+  const rowsInput = document.getElementById("rows");
+  const spacing = 24;
+  let columns = 16;
+  let rows = 12;
+  let x = 0;
+  let y = 0;
+
+  function draw() {
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    for (let row = 0; row < rows; row++) {
+      for (let column = 0; column < columns; column++) {
+        context.beginPath();
+        context.arc((column + 0.5) * spacing, (row + 0.5) * spacing, 7, 0, 2 * Math.PI);
+        context.fillStyle = column === x && row === y ? "red" : "#aaa";
+        context.fill();
+      }
+    }
+    canvas.setAttribute("aria-label", `Dot matrix: red dot at column ${x + 1}, row ${y + 1}`);
+  }
+
+  function reset() {
+    columns = Number(columnsInput.value);
+    rows = Number(rowsInput.value);
+    x = 0;
+    y = 0;
+    canvas.width = columns * spacing;
+    canvas.height = rows * spacing;
+    draw();
+  }
+
+  document.getElementById("settings").onsubmit = (event) => {
+    event.preventDefault();
+    reset();
+  };
+
+  function direction(value) {
+    return value < 400 ? -1 : value > 600 ? 1 : 0;
+  }
+
+  const socket = new WebSocket("ws://127.0.0.1:8765");
+  socket.onopen = () => { status.textContent = "Connected"; };
+  socket.onmessage = (event) => {
+    if (typeof event.data !== "string") {
+      reading.textContent = "Ignored message: expected text.";
+      return;
+    }
+    const parts = event.data.trim().split(/\s+/);
+    const values = parts.map(Number);
+    if (parts.length !== 2 || values.some(value => !Number.isFinite(value) || value < 0 || value > 1023)) {
+      reading.textContent = "Ignored message: expected two numbers in [0, 1023].";
+      return;
+    }
+    const [vrx, vry] = values;
+    x = Math.max(0, Math.min(columns - 1, x + direction(vrx)));
+    y = Math.max(0, Math.min(rows - 1, y + direction(vry)));
+    reading.textContent = `vrx: ${vrx}, vry: ${vry} — column: ${x + 1}, row: ${y + 1}`;
+    draw();
+  };
+  socket.onerror = () => { status.textContent = "WebSocket error. Check the Python server."; };
+  socket.onclose = () => { status.textContent = "Disconnected. Start the server and reload this page."; };
+
+  reset();
+</script>
+</html>
