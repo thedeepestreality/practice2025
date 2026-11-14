@@ -30,5 +30,15 @@ To print messages in the terminal without a serial device, run
 `index.html` and click the send button. Run only one server at a time;
 both use port 8765.
 
+For the opposite direction (serial device to browser), run:
+```sh
+python serial_to_websocket.py COM8
+```
+This server reads at 115200 baud and forwards each UTF-8 line ending in `\n`
+to all connected browsers. Change its baud rate to match your device.
+Stop the other servers first, then open or reload `index.html`. Incoming
+strings appear automatically on the page; the send button isn't needed.
+This server only reads from serial and sends to WebSocket.
+
 API references: [websockets](https://websockets.readthedocs.io/en/stable/reference/asyncio/server.html),
 [pySerial](https://pyserial.readthedocs.io/en/latest/pyserial_api.html).

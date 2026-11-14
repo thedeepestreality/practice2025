@@ -8,9 +8,9 @@ from websockets.asyncio.server import serve
 
 
 async def main():
-    port = sys.argv[1] if len(sys.argv) > 1 else "COM3"
+    port = sys.argv[1] if len(sys.argv) > 1 else "COM8"
     # Change 9600 to match your device's baud rate.
-    with serial.Serial(port, baudrate=9600, write_timeout=1) as device:
+    with serial.Serial(port, baudrate=115200, write_timeout=1) as device:
 
         async def handle(websocket):
             async for message in websocket:
