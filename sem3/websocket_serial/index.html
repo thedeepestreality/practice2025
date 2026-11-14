@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>WebSocket to serial</title>
+
+<h1>WebSocket to serial</h1>
+<p id="status">Connecting...</p>
+<input id="message" value="Hello from JavaScript!" aria-label="Message">
+<button id="send" disabled>Send to serial</button>
+<pre id="reply"></pre>
+
+<script>
+  const status = document.getElementById("status");
+  const message = document.getElementById("message");
+  const send = document.getElementById("send");
+  const reply = document.getElementById("reply");
+  const socket = new WebSocket("ws://127.0.0.1:8765");
+
+  socket.onopen = () => {
+    status.textContent = "Connected";
+    send.disabled = false;
+  };
+  send.onclick = () => socket.send(message.value);
+  socket.onmessage = (event) => { reply.textContent = event.data; };
+  socket.onerror = () => { status.textContent = "Connection error. Is server.py running?"; };
+  socket.onclose = () => {
+    status.textContent = "Disconnected. Start the server and reload this page.";
+    send.disabled = true;
+  };
+</script>
+</html>
